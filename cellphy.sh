@@ -25,6 +25,7 @@ usage()
   echo "\t-r           REDO mode: overwrite all result files"
   echo "\t-t THREADS   Number of threads to use (default: autodetect)"
   echo "\t-l           Use ML model instead of GL model"
+  echo "\t-s           Safe numerics mode (use if RAxML exits with errors)"
   echo "\nExpert usage: ./cellphy.sh RAXML [raxml options]\n"
 }
 
@@ -37,6 +38,7 @@ fi
 
 root=`dirname $0`
 raxml_stem=$root/bin/raxml-ng-cellphy
+gt16_map=$root/bin/GT16.map
 sc_convert=$root/script/sc-caller-convert.sh
 support_viz=$root/script/support-map.R
 mutmap_viz=$root/script/mutation-map.R
@@ -68,6 +70,7 @@ raxml_args="--force perf_threads"
 raxml_search_args=
 bs_args="--bs-tree autoMRE{200} --bs-metric fbp,tbe"
 use_ml=0
+blopt_safe=0
 
 # check for run mode
 case "$1" in
@@ -127,6 +130,8 @@ while getopts "h?vag:o:p:rm:t:yzl" opt; do
         ;;
     l)  use_ml=1
         ;;
+    s)  blopt_safe=1
+        ;;
     esac
 done
 
@@ -174,6 +179,10 @@ else
   echo "non-VCF input detected"
   fmt=auto
   amodel=$gt_model
+  if [ $use_gt10 -eq 0 ]; then
+    amodel="${gt_model}+M{$gt16_map}"
+    blopt_safe=1 
+  fi
 fi  
 
 if [ $use_ml -eq 1 ]; then
@@ -185,6 +194,7 @@ fi
 [ -z $prefix ] && prefix=$msa
 [ ! -z $threads ] && raxml_args="$raxml_args --threads $threads"
 [ $redo -eq 1 ] && raxml_args="$raxml_args --redo"
+[ $blopt_safe -eq 1 ] && raxml_args="$raxml_args --blopt nr_safe"
 
 $raxml $mode --msa $msa --model $model --msa-format $fmt --prefix $prefix  $raxml_search_args $raxml_args
 
