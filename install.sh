@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # CellPhy installation script 
 # Created by: Alexey Kozlov, Joao M Alves, Alexandros Stamatakis & David Posada - July 2025
 
